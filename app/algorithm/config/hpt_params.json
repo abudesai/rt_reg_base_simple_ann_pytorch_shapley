@@ -1,0 +1,23 @@
+[
+  {
+    "name": "n_estimators",
+    "short_desc": "Number of trees in the forest",
+    "default": 100,
+    "type": "real",
+    "range_low": 100,
+    "range_high": 1000,
+    "search_type": "log-uniform",
+    "run_HPO": true
+  },
+
+  {
+    "name": "max_features",
+    "short_desc": "Features to be considered when looking for best split",
+    "default": 1,
+    "type": "real",
+    "range_low": 1,
+    "range_high": 10,
+    "search_type": "uniform",
+    "run_HPO": true
+  }
+]

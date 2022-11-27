@@ -1,0 +1,18 @@
+pandas
+numpy==1.20
+numba==0.53.0
+scikit-learn==1.0
+feature-engine==1.2.0
+scikit-optimize==0.9.0
+flask==2.0.2
+gunicorn==20.1.0
+llvmlite==0.36.0
+shap==0.41.0
+
+# base docker image installs pytorch/pytorch:1.12.0 so no need to install pytorch through requirements.txt
+# but if you want to run locally on a windows machine, uncomment the following lines
+# torch==1.12.1
+# torchvision==0.13.1
+
+# for mac/linux, get a similar version 
+# --find-links https://download.pytorch.org/whl/torch_stable.html
