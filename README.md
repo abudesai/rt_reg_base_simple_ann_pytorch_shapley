@@ -1,4 +1,4 @@
-# ANN-based Regressor in PyTorch for Regression-Base problem
+# ANN-based Regressor in PyTorch for Regression-Base problem with Shapley explanations
 
 ## ANN-based Regressor in PyTorch for Regression-Base problem category as per Ready Tensor specifications.
 
