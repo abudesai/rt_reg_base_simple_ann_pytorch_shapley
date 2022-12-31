@@ -187,6 +187,8 @@ class Regressor:
         return losses
 
     def predict(self, X):
+        if isinstance(X, pd.DataFrame):
+            X = X.values
         X = T.FloatTensor(X).to(device)
         preds = self.net(X).detach().cpu().numpy().reshape(-1, 1)
         return preds

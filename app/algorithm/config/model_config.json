@@ -1,13 +1,4 @@
 {
-  "MODEL_NAME": "Random_forest",
-  "default_fnames": {
-    "def_train_fname": "train.csv",
-    "def_test_fname": "test.csv",
-    "def_schema_fname": "input_schema.json",
-    "preprocessor_fname": "preprocessor.save",
-    "predictions_fname": "predictions.csv",
-    "scoring_fname": "scoring.csv"
-  },
   "pp_params": {
     "cat_params": {
       "max_perc_miss_for_most_freq_impute": 0.1,

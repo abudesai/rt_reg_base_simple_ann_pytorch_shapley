@@ -2,7 +2,6 @@ import numpy as np, pandas as pd
 import os
 from shap import Explainer
 import json
-import sys
 
 import algorithm.utils as utils
 import algorithm.preprocessing.pipeline as pipeline
@@ -23,14 +22,16 @@ class ModelServer:
             "regressionBaseMainInput"
         ]["idField"]
         self.has_local_explanations = True
-        self.MAX_LOCAL_EXPLANATIONS = 5
+        self.MAX_LOCAL_EXPLANATIONS = 3
 
     def _get_preprocessor(self):
-        self.preprocessor = pipeline.load_preprocessor(self.model_path)
+        if self.preprocessor is None:
+            self.preprocessor = pipeline.load_preprocessor(self.model_path)
         return self.preprocessor
 
     def _get_model(self):
-        self.model = regressor.load_model(self.model_path)
+        if self.model is None:
+            self.model = regressor.load_model(self.model_path)
         return self.model
 
     def predict(self, data):
@@ -46,12 +47,12 @@ class ModelServer:
         # transform data - returns a dict of X (transformed input features) and Y(targets, if any, else None)
         proc_data = preprocessor.transform(data)
         # Grab input features for prediction
-        pred_X = proc_data["X"].values.astype(np.float)
+        pred_X = proc_data["X"].astype(np.float)
         # make predictions
         preds = model.predict(pred_X)
         # inverse transform the predictions to original scale
         preds = pipeline.get_inverse_transform_on_preds(preprocessor, model_cfg, preds)
-        # return te prediction df with the id and prediction fields
+        # return the prediction df with the id and prediction fields
         preds_df = data[[self.id_field_name]].copy()
         preds_df["prediction"] = np.round(preds, 4)
 
@@ -60,13 +61,9 @@ class ModelServer:
     def _get_predictions(self, X):
         model = self._get_model()
         preds = model.predict(X)
-        return preds
-
-    def _get_scaled_predictions(self, X):
-        model = self._get_model()
         preprocessor = self._get_preprocessor()
-        preds = model.predict(X)
         preds = pipeline.get_inverse_transform_on_preds(preprocessor, model_cfg, preds)
+        preds = np.squeeze(preds, axis=(1))
         return preds
 
     def explain_local(self, data):
@@ -83,43 +80,40 @@ class ModelServer:
         proc_data = preprocessor.transform(data.head(self.MAX_LOCAL_EXPLANATIONS))
         # ------------------------------------------------------------------------------
         # original class predictions
-
-        model = self._get_model()
-        X_columns = list(proc_data["X"].columns)
-        pred_X = proc_data["X"].values.astype(np.float)
+        pred_X = proc_data["X"].astype(np.float)
         ids = proc_data["ids"]
 
-        # pred_values = model.predict(pred_X)
-        pred_values = self._get_scaled_predictions(pred_X)
-
+        pred_values = self._get_predictions(pred_X)
         # ------------------------------------------------------------------------------
         print(f"Generating local explanations for {pred_X.shape[0]} sample(s).")
         # create the shapley explainer
         mask = np.zeros_like(pred_X)
-        explainer = Explainer(self._get_scaled_predictions, mask, seed=1)
+        explainer = Explainer(self._get_predictions, mask, seed=1)
         # Get local explanations
         shap_values = explainer(pred_X)
-        print(shap_values)
 
         # ------------------------------------------------------------------------------
         # create pd dataframe of explanation scores
         N = pred_X.shape[0]
         explanations = []
         for i in range(N):
-            samle_expl_dict = {}
-            samle_expl_dict[self.id_field_name] = ids[i]
-            samle_expl_dict["predictions"] = pred_values[i]
-            samle_expl_dict["baseline"] = shap_values.base_values[i]
+            sample_expl_dict = {}
+            sample_expl_dict["baseline"] = shap_values.base_values[i]
 
             feature_impacts = {}
             for f_num, feature in enumerate(shap_values.feature_names):
-                feature_impacts[X_columns[f_num]] = round(
-                    shap_values.values[i][f_num], 4
-                )
+                feature_impacts[feature] = round(shap_values.values[i][f_num], 4)
 
-            samle_expl_dict["feature_impacts"] = feature_impacts
-            explanations.append(samle_expl_dict)
+            sample_expl_dict["feature_scores"] = feature_impacts
+            explanations.append(
+                {
+                    self.id_field_name: ids[i],
+                    "prediction": np.round(pred_values[i], 5),
+                    "explanations": sample_expl_dict,
+                }
+            )
 
+        explanations = {"predictions": explanations}
         # ------------------------------------------------------
         """
         To plot the shapley values:
