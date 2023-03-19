@@ -37,17 +37,5 @@
       "XYSPLITTER": "xysplitter"
     }
   },
-  "data_schema_keys": {
-    "attributes": "attributes",
-    "id_field": "idField",
-    "target_attr_name": "targetField",
-    "categorical": "CATEGORICAL",
-    "numeric": "NUMERIC",
-    "attr_type": "attributeType",
-    "attr_name": "attributeName"
-  },
-  "model_outputs": {
-    "preds_col_name": "predictionFieldName"
-  },
   "valid_split": 0.1
 }

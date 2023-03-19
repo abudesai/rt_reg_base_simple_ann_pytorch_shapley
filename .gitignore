@@ -13,7 +13,6 @@ hpt_results/
 **/model_*_*_*.json
 
 
-build_and_push.sh
 venv/
 
 __pycache__/
